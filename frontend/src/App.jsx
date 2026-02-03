@@ -288,8 +288,7 @@ function App() {
         <div className="section-icon-wrapper">
           <Trophy size={32} className="text-amber-400" />
         </div>
-        <span className="section-label">Retention & Mastery</span>
-        <h2 className="section-title">Performance Core</h2>
+        <span className="section-label">CORE ANALYTICS HARVEST</span>
       </div>
 
       <div className="succeed-wrapper">
@@ -337,8 +336,7 @@ function App() {
             <div className="section-icon-wrapper">
               <Clock size={32} className="text-primary" />
             </div>
-            <span className="section-label">Strategic Focus</span>
-            <h2 className="section-title">Your Workflow</h2>
+            <span className="section-label">DAILY MISSION CONTROL</span>
           </div>
           <motion.div
             className="glass-card main-task-card"
@@ -497,8 +495,7 @@ function App() {
             <div className="section-icon-wrapper">
               <TrendingUp size={32} className="text-primary" />
             </div>
-            <span className="section-label">Momentum Flow</span>
-            <h2 className="section-title">Performance Timeline</h2>
+            <span className="section-label">MOMENTUM FLOW ARCHIVE</span>
           </div>
 
           {/* NEW PREMIUM GROWTH ANALYSIS CARD (DIFFERENT LAYOUT) */}
@@ -622,8 +619,7 @@ function App() {
             <div className="section-icon-wrapper">
               <CalIcon size={32} className="text-primary" />
             </div>
-            <span className="section-label">Planning Core</span>
-            <h2 className="section-title">Date Selection</h2>
+            <span className="section-label">TEMPORAL PLANNING CORE</span>
           </div>
           <motion.div
             className="glass-card"
@@ -632,12 +628,11 @@ function App() {
           >
             <Calendar onChange={setSelectedDate} value={selectedDate} tileContent={tileContent} />
 
-            <div className="section-header mt-16 text-center">
-              <div className="section-icon-wrapper mx-auto">
+            <div className="section-header mt-16">
+              <div className="section-icon-wrapper">
                 <Quote size={32} className="text-primary" />
               </div>
-              <span className="section-label">Daily Focus</span>
-              <h2 className="section-title">Wisdom Insight</h2>
+              <span className="section-label">COGNITIVE FOCUS FUEL</span>
             </div>
 
             <motion.div
@@ -653,12 +648,11 @@ function App() {
               </p>
             </motion.div>
 
-            <div className="section-header mt-16 text-center">
-              <div className="section-icon-wrapper mx-auto">
+            <div className="section-header mt-16">
+              <div className="section-icon-wrapper">
                 <Trophy size={32} className="text-yellow-500" />
               </div>
-              <span className="section-label">Milestone Progress</span>
-              <h2 className="section-title">Retention & Mastery</h2>
+              <span className="section-label">ACHIEVEMENT REGISTRY</span>
             </div>
 
             <motion.div

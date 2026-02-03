@@ -106,32 +106,63 @@ body {
 }
 
 .section-label {
-  font-size: 0.8rem;
+  font-size: 1.1rem;
   font-weight: 1000;
   text-transform: uppercase;
-  letter-spacing: 0.6em;
-  color: var(--primary);
-  opacity: 0.8;
+  letter-spacing: 0.8em;
+  margin-right: -0.8em;
+  /* COUNTERACTS LETTER-SPACING FOR PERFECT CENTERING */
+  background: linear-gradient(to right, var(--primary), #a855f7, var(--primary));
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shine 4s linear infinite;
   margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+@keyframes shine {
+  to {
+    background-position: 200% center;
+  }
 }
 
 .section-title {
-  font-size: 2.2rem;
-  font-weight: 950;
-  color: white;
-  text-align: center;
-  letter-spacing: -0.02em;
+  display: none;
 }
 
 .section-icon-wrapper {
-  width: 60px;
-  height: 60px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 20px;
+  width: 70px;
+  height: 70px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 0.5rem;
+  margin-bottom: 1rem;
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.3),
+    inset 0 0 15px rgba(255, 255, 255, 0.02);
+  transition: all 0.4s ease;
+  position: relative;
+}
+
+.section-icon-wrapper::after {
+  content: '';
+  position: absolute;
+  inset: -10px;
+  background: radial-gradient(circle, var(--primary) 0%, transparent 70%);
+  opacity: 0.1;
+  z-index: -1;
+  border-radius: 50%;
+}
+
+.section-header:hover .section-icon-wrapper {
+  transform: translateY(-5px) scale(1.05);
+  border-color: var(--primary);
+  background: rgba(99, 102, 241, 0.08);
 }
 
 /* RESPONSIVE DESIGN */
@@ -318,16 +349,36 @@ input[type="text"]:focus {
   display: flex;
   align-items: center;
   gap: 1.5rem;
-  padding: 1.5rem;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--border);
-  border-radius: 22px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 1.8rem 2rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 24px;
+  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  position: relative;
+  overflow: hidden;
 }
 
 .todo-item:hover {
-  background: rgba(255, 255, 255, 0.07);
-  transform: translateX(10px);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(99, 102, 241, 0.3);
+  transform: translateX(8px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+}
+
+.todo-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: var(--primary);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.todo-item:hover::before {
+  opacity: 1;
 }
 
 .todo-text {
@@ -398,15 +449,28 @@ input[type="text"]:focus {
   margin-top: 0.5rem;
 }
 
-.grit-value {
-  font-size: 4rem;
-  font-weight: 950;
-  background: linear-gradient(135deg, #6366f1 0%, #f43f5e 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  margin: 1.5rem 0;
-  letter-spacing: -0.04em;
+/* DELETE BUTTON ENHANCEMENT */
+.btn-icon.delete {
+  background: rgba(239, 68, 68, 0.1);
+  color: rgba(239, 68, 68, 0.6);
+  padding: 0.8rem;
+  border-radius: 14px;
+  border: 1px solid rgba(239, 68, 68, 0.1);
+  transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+  opacity: 0.3;
+  transform: translateX(10px);
+}
+
+.todo-item:hover .btn-icon.delete {
+  opacity: 1;
+  transform: translateX(0);
+  background: rgba(239, 68, 68, 0.15);
+}
+
+.btn-icon.delete:hover {
+  background: var(--danger);
+  color: white;
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
 }
 
 .style-badge {
