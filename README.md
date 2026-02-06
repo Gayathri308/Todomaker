@@ -6,21 +6,21 @@
 ## ✨ Features
 - **Modern UI**: Stunning glassmorphic design system using Vanilla CSS.
 - **Full CRUD**: Add, Edit, Delete, and Toggle tasks.
-- **Persistence**: Real-time sync with MongoDB Atlas.
+- **Persistence**: Real-time sync with Supabase (PostgreSQL).
 - **Smart Fallback**: Automatically switches to `LocalStorage` if the backend is offline.
 - **Responsive**: Fully optimized for mobile and desktop.
 
 ## 🛠️ Tech Stack
 - **Frontend**: React.js, Vite, Axios, Lucide Icons, Framer Motion.
 - **Backend**: Node.js, Express.js.
-- **Database**: MongoDB Atlas (Mongoose ODM).
+- **Database**: Supabase (PostgreSQL).
 - **Styling**: Modern CSS3 (CSS Variables, Flexbox, Glassmorphism).
 
 ## 🚀 Quick Start
 
 ### 1. Prerequisites
 - Node.js installed.
-- A MongoDB Atlas account (for the cloud database).
+- A Supabase account (for the cloud database).
 
 ### 2. Installation
 ```bash
@@ -30,7 +30,7 @@ git clone <your-repo-link>
 # Setup Backend
 cd backend
 npm install
-# Create a .env file and add your MONGODB_URI
+# Create a .env file and add your Supabase credentials
 
 # Setup Frontend
 cd ../frontend
@@ -55,14 +55,21 @@ npm run dev
 - `/backend`: Node.js/Express API.
 
 ## 📝 Deployment
-- **Frontend**: Deploy to Vercel or Netlify.
-- **Backend**: Deploy to Render or Railway.
-- **Database**: MongoDB Atlas Free Tier.
+
+**🚀 Ready to deploy? Check out our detailed guides:**
+- **[DEPLOYMENT_CHECKLIST.md](./DEPLOYMENT_CHECKLIST.md)** - Quick checklist (5 min read)
+- **[DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md)** - Complete step-by-step guide
+- **[RENDER_DEPLOYMENT.md](./RENDER_DEPLOYMENT.md)** - Quick start with pro tips
+
+**Recommended Stack:**
+- **Frontend**: Render Static Site (Free)
+- **Backend**: Render Web Service (Free)
+- **Database**: Supabase (Free Tier)
 
 ## 🎓 Skills Gained
 - RESTful API design.
 - React components and state management.
-- Database modeling with Mongoose.
+- Database integration with Supabase.
 - UI/UX design with glassmorphism.
 - Production-ready deployment workflows.
 
