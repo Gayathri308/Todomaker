@@ -14,7 +14,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import './index.css';
 
-const API_URL = 'http://localhost:5000/api/tasks';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/tasks';
 
 // --- ULTIMATE LIT AUDIO SUITE ---
 const SOUNDS = {
@@ -228,19 +228,19 @@ function App() {
 
     const taskData = { text: newTask, dueDate: selectedDate.toISOString(), priority: newPriority };
     const tempId = Date.now().toString();
-    const optimisticTask = { ...taskData, _id: tempId, completed: false, createdAt: new Date().toISOString() };
+    const optimisticTask = { ...taskData, id: tempId, completed: false, createdAt: new Date().toISOString() };
 
     setTasks(prev => [optimisticTask, ...prev]);
     setNewTask('');
 
     try {
       const res = await axios.post(API_URL, taskData);
-      setTasks(prev => prev.map(t => t._id === tempId ? res.data : t));
+      setTasks(prev => prev.map(t => t.id === tempId ? res.data : t));
     } catch (err) { }
   };
 
   const toggleComplete = async (id, completed, priority) => {
-    setTasks(tasks.map(t => t._id === id ? { ...t, completed: !completed } : t));
+    setTasks(tasks.map(t => t.id === id ? { ...t, completed: !completed } : t));
     if (!completed) {
       const defaults = {
         spread: 360,
@@ -268,7 +268,7 @@ function App() {
   };
 
   const deleteTask = async (id) => {
-    setTasks(tasks.filter(t => t._id !== id));
+    setTasks(tasks.filter(t => t.id !== id));
     try { await axios.delete(`${API_URL}/${id}`); } catch (err) { }
   };
 
@@ -414,7 +414,7 @@ function App() {
                         <AnimatePresence mode="popLayout">
                           {dailyTasks.filter(t => !t.completed).map((task) => (
                             <motion.li
-                              key={task._id}
+                              key={task.id}
                               layout
                               initial={{ opacity: 0, x: -50 }}
                               animate={{ opacity: 1, x: 0 }}
@@ -422,7 +422,7 @@ function App() {
                               transition={{ type: "spring", stiffness: 200, damping: 25 }}
                               className={`todo-item priority-${task.priority} p-6 shadow-lg`}
                             >
-                              <div className="checkbox scale-150" onClick={() => toggleComplete(task._id, task.completed, task.priority)}>
+                              <div className="checkbox scale-150" onClick={() => toggleComplete(task.id, task.completed, task.priority)}>
                                 {task.completed && <Check size={24} color="white" />}
                               </div>
                               <div className="flex-1">
@@ -433,7 +433,7 @@ function App() {
                               <motion.button
                                 whileHover={{ scale: 1.4, color: '#ef4444', rotate: 10 }}
                                 className="btn-icon delete"
-                                onClick={() => deleteTask(task._id)}
+                                onClick={() => deleteTask(task.id)}
                               >
                                 <Trash2 size={28} />
                               </motion.button>
@@ -456,7 +456,7 @@ function App() {
                         <AnimatePresence mode="popLayout">
                           {dailyTasks.filter(t => t.completed).map((task) => (
                             <motion.li
-                              key={task._id}
+                              key={task.id}
                               layout
                               initial={{ opacity: 0, x: 50 }}
                               animate={{ opacity: 1, x: 0 }}
@@ -464,7 +464,7 @@ function App() {
                               transition={{ type: "spring", stiffness: 200, damping: 25 }}
                               className={`todo-item completed priority-${task.priority} p-6 shadow-lg grayscale`}
                             >
-                              <div className="checkbox checked scale-150" onClick={() => toggleComplete(task._id, task.completed, task.priority)}>
+                              <div className="checkbox checked scale-150" onClick={() => toggleComplete(task.id, task.completed, task.priority)}>
                                 <Check size={24} color="white" />
                               </div>
                               <div className="flex-1">
@@ -475,7 +475,7 @@ function App() {
                               <motion.button
                                 whileHover={{ scale: 1.4, color: '#ef4444', rotate: 10 }}
                                 className="btn-icon delete"
-                                onClick={() => deleteTask(task._id)}
+                                onClick={() => deleteTask(task.id)}
                               >
                                 <Trash2 size={28} />
                               </motion.button>
@@ -519,26 +519,26 @@ function App() {
               }}>
             </div>
 
-            <div className="flex justify-between items-center mb-12 relative z-10">
-              <div>
-                <h3 className="flex items-center gap-4 text-3xl font-black text-white">
+            <div className="momentum-header mb-12 relative z-10">
+              <div className="momentum-title-group">
+                <h3 className="momentum-main-title">
                   Visualizing Your Momentum Flow
                 </h3>
-                <p className="text-muted font-bold mt-2 uppercase tracking-[0.4em] text-xs opacity-50">Trend & Analytics</p>
+                <p className="momentum-subtitle">Trend & Analytics</p>
               </div>
-              <div className="flex gap-10">
-                <div className="text-center">
-                  <div className="text-3xl font-black text-white">{tasks.length}</div>
-                  <div className="text-[10px] font-black uppercase text-primary tracking-widest mt-1">Total Effort</div>
+              <div className="momentum-stats-group">
+                <div className="momentum-stat">
+                  <div className="momentum-stat-value">{tasks.length}</div>
+                  <div className="momentum-stat-label">Total Effort</div>
                 </div>
-                <div className="text-center">
-                  <div className="text-3xl font-black text-success">{tasks.filter(t => t.completed).length}</div>
-                  <div className="text-[10px] font-black uppercase text-success tracking-widest mt-1">Growth Wins</div>
+                <div className="momentum-stat">
+                  <div className="momentum-stat-value">{tasks.filter(t => t.completed).length}</div>
+                  <div className="momentum-stat-label success">Growth Wins</div>
                 </div>
               </div>
             </div>
 
-            <div className="relative z-10" style={{ height: '420px', marginLeft: '-30px', marginRight: '-10px' }}>
+            <div className="chart-wrapper relative z-10">
               <ResponsiveContainer width="100%" height="100%">
                 <ComposedChart data={chartData} margin={{ top: 20, right: 30, left: 30, bottom: 20 }}>
                   <defs>
@@ -628,7 +628,7 @@ function App() {
           >
             <Calendar onChange={setSelectedDate} value={selectedDate} tileContent={tileContent} />
 
-            <div className="section-header mt-16">
+            <div className="section-header">
               <div className="section-icon-wrapper">
                 <Quote size={32} className="text-primary" />
               </div>
@@ -648,7 +648,7 @@ function App() {
               </p>
             </motion.div>
 
-            <div className="section-header mt-16">
+            <div className="section-header">
               <div className="section-icon-wrapper">
                 <Trophy size={32} className="text-yellow-500" />
               </div>

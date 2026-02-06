@@ -1,5 +1,5 @@
 const express = require('express');
-const mongoose = require('mongoose');
+const { createClient } = require('@supabase/supabase-js');
 const cors = require('cors');
 require('dotenv').config();
 
@@ -10,28 +10,27 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-// MongoDB Connection
-mongoose.connect(process.env.MONGODB_URI)
-    .then(() => console.log('MongoDB Connected'))
-    .catch(err => console.log('MongoDB Connection Error:', err));
+// Supabase Connection
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_KEY;
 
-// Task Model
-const taskSchema = new mongoose.Schema({
-    text: { type: String, required: true },
-    completed: { type: Boolean, default: false },
-    dueDate: { type: String },
-    priority: { type: String, default: 'normal' }, // normal, important, most-important
-    createdAt: { type: Date, default: Date.now }
-});
+if (!supabaseUrl || !supabaseKey || supabaseUrl === 'your_supabase_project_url') {
+    console.error('CRITICAL: Supabase credentials missing in .env');
+}
 
-const Task = mongoose.model('Task', taskSchema);
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Routes
 // 1. Get all tasks
 app.get('/api/tasks', async (req, res) => {
     try {
-        const tasks = await Task.find().sort({ createdAt: -1 });
-        res.json(tasks);
+        const { data, error } = await supabase
+            .from('tasks')
+            .select('*')
+            .order('createdAt', { ascending: false });
+
+        if (error) throw error;
+        res.json(data);
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
@@ -39,14 +38,22 @@ app.get('/api/tasks', async (req, res) => {
 
 // 2. Add a new task
 app.post('/api/tasks', async (req, res) => {
-    const task = new Task({
+    const taskData = {
         text: req.body.text,
-        dueDate: req.body.dueDate,
-        priority: req.body.priority || 'normal'
-    });
+        dueDate: req.body.dueDate || new Date().toISOString(),
+        priority: req.body.priority || 'standard',
+        completed: false,
+        createdAt: new Date().toISOString()
+    };
+
     try {
-        const newTask = await task.save();
-        res.status(201).json(newTask);
+        const { data, error } = await supabase
+            .from('tasks')
+            .insert([taskData])
+            .select();
+
+        if (error) throw error;
+        res.status(201).json(data[0]);
     } catch (err) {
         res.status(400).json({ message: err.message });
     }
@@ -55,13 +62,14 @@ app.post('/api/tasks', async (req, res) => {
 // 3. Update a task
 app.put('/api/tasks/:id', async (req, res) => {
     try {
-        const updateData = { ...req.body };
-        const updatedTask = await Task.findByIdAndUpdate(
-            req.params.id,
-            updateData,
-            { new: true }
-        );
-        res.json(updatedTask);
+        const { data, error } = await supabase
+            .from('tasks')
+            .update(req.body)
+            .eq('id', req.params.id)
+            .select();
+
+        if (error) throw error;
+        res.json(data[0]);
     } catch (err) {
         res.status(400).json({ message: err.message });
     }
@@ -70,7 +78,12 @@ app.put('/api/tasks/:id', async (req, res) => {
 // 4. Delete a task
 app.delete('/api/tasks/:id', async (req, res) => {
     try {
-        await Task.findByIdAndDelete(req.params.id);
+        const { error } = await supabase
+            .from('tasks')
+            .delete()
+            .eq('id', req.params.id);
+
+        if (error) throw error;
         res.json({ message: 'Task deleted successfully' });
     } catch (err) {
         res.status(500).json({ message: err.message });
@@ -79,4 +92,5 @@ app.delete('/api/tasks/:id', async (req, res) => {
 
 app.listen(PORT, () => {
     console.log(`Server is running on port: ${PORT}`);
+    console.log('Supabase Bridge Active');
 });
