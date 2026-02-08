@@ -18,7 +18,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/tasks
 
 // --- ULTIMATE LIT AUDIO SUITE ---
 const SOUNDS = {
-  standard: 'https://cdn.pixabay.com/audio/2022/03/15/audio_7314782071.mp3', // Clean crisp pop
+  standard: 'https://assets.mixkit.co/active_storage/sfx/2578/2578-preview.mp3', // Clean crisp pop
   'high-priority': 'https://assets.mixkit.co/active_storage/sfx/2018/2018-preview.mp3', // Professional chime
   'top-priority': 'https://assets.mixkit.co/active_storage/sfx/2019/2019-preview.mp3'  // EPIC ACHIEVEMENT (LIT)
 };
@@ -103,6 +103,10 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(new Date());
 
+  // STRICT MODE: You can only act on Today's mission.
+  // "Yesterday is history, tomorrow is a mystery."
+  const isActionable = isSameDay(selectedDate, new Date());
+
   const [selectedQuote, setSelectedQuote] = useState('');
 
   useEffect(() => {
@@ -154,7 +158,8 @@ function App() {
   }, [tasks]);
 
   const chartData = useMemo(() => {
-    return [6, 5, 4, 3, 2, 1, 0].map(daysAgo => {
+    // 1. Calculate base daily stats
+    const dailyStats = [6, 5, 4, 3, 2, 1, 0].map(daysAgo => {
       const date = new Date();
       date.setDate(date.getDate() - daysAgo);
 
@@ -165,22 +170,43 @@ function App() {
       const prevDayTasks = tasks.filter(t => isSameDay(parseISO(t.dueDate || t.createdAt), prevPeriodDate));
 
       const completed = dayTasks.filter(t => t.completed).length;
-      const prevCompleted = prevDayTasks.filter(t => t.completed).length;
+
+      // ESTIMATED FOCUS HOURS: 
+      const focusHours = (completed * 0.75).toFixed(1);
 
       return {
         name: format(date, 'EEE'),
         fullDate: format(date, 'MMMM do'),
-        currentRate: dayTasks.length === 0 ? 0 : Math.round((completed / dayTasks.length) * 100),
-        prevRate: prevDayTasks.length === 0 ? 0 : Math.round((prevCompleted / prevDayTasks.length) * 100),
+        focusHours: parseFloat(focusHours),
+        growthScore: (completed * 10) + (dayTasks.length * 2), // Gamified score
         completed,
         total: dayTasks.length
       };
     });
+
+    // 2. Calculate Cumulative Growth Curve (Visualizing "Self Development")
+    let runningTotal = 0;
+    // The dailyStats array is already chronological (6 days ago -> Today)
+    const finalData = dailyStats.map(day => {
+      runningTotal += day.growthScore;
+      return { ...day, cumulativeGrowth: runningTotal };
+    });
+
+    return finalData;
   }, [tasks]);
 
   const dailyTrend = useMemo(() => {
     if (chartData.length < 2) return 0;
-    return chartData[6].rate - chartData[5].rate;
+    // Assuming chartData is ordered from oldest to newest (6 days ago to today)
+    // So chartData[6] is today, chartData[5] is yesterday
+    const todayCompleted = chartData[chartData.length - 1].completed;
+    const yesterdayCompleted = chartData[chartData.length - 2].completed;
+
+    // Calculate percentage change in completed tasks
+    if (yesterdayCompleted === 0) {
+      return todayCompleted > 0 ? 100 : 0; // If yesterday was 0 and today is >0, it's a 100% increase
+    }
+    return Math.round(((todayCompleted - yesterdayCompleted) / yesterdayCompleted) * 100);
   }, [chartData]);
 
   const tileContent = ({ date, view }) => {
@@ -240,6 +266,10 @@ function App() {
   };
 
   const toggleComplete = async (id, completed, priority) => {
+    if (!isActionable) {
+      alert("You cannot change the past! Focus on Today.");
+      return;
+    }
     setTasks(tasks.map(t => t.id === id ? { ...t, completed: !completed } : t));
     if (!completed) {
       const defaults = {
@@ -264,10 +294,20 @@ function App() {
 
       playSuccessSound(priority);
     }
-    try { await axios.put(`${API_URL}/${id}`, { completed: !completed }); } catch (err) { }
+    const completionData = {
+      completed: !completed,
+      completedAt: !completed ? new Date().toISOString() : null
+    };
+
+    setTasks(tasks.map(t => t.id === id ? { ...t, ...completionData } : t));
+    try { await axios.put(`${API_URL}/${id}`, completionData); } catch (err) { }
   };
 
   const deleteTask = async (id) => {
+    if (!isActionable) {
+      alert("You cannot delete tasks from the past or future! Focus on Today.");
+      return;
+    }
     setTasks(tasks.filter(t => t.id !== id));
     try { await axios.delete(`${API_URL}/${id}`); } catch (err) { }
   };
@@ -310,7 +350,7 @@ function App() {
               <div className="stat-trend flex items-center justify-center gap-3 px-6 py-2 rounded-2xl bg-white/5 mt-4"
                 style={{ color: dailyTrend >= 0 ? 'var(--success)' : 'var(--danger)' }}>
                 <span className="text-2xl font-black">{dailyTrend >= 0 ? '↑' : '↓'} {Math.abs(dailyTrend)}%</span>
-                <span className="text-sm font-bold uppercase tracking-widest opacity-70">Weekly Momentum</span>
+                <span className="text-sm font-bold uppercase tracking-widest opacity-70">Daily Momentum</span>
               </div>
             </motion.div>
 
@@ -359,7 +399,8 @@ function App() {
               </div>
             </header>
 
-            <form className="todo-form" onSubmit={addTask}>
+            {/* HEADER INPUT FORM */}
+            <form className={`todo-form ${!isActionable ? 'opacity-50 pointer-events-none grayscale' : ''}`} onSubmit={addTask}>
               <div className="form-stack">
                 <div className="input-row">
                   <input
@@ -420,22 +461,25 @@ function App() {
                               animate={{ opacity: 1, x: 0 }}
                               exit={{ opacity: 0, scale: 0.5 }}
                               transition={{ type: "spring", stiffness: 200, damping: 25 }}
-                              className={`todo-item priority-${task.priority} p-6 shadow-lg`}
+                              className={`todo-item priority-${task.priority} p-4 md:p-6 shadow-lg`}
                             >
-                              <div className="checkbox scale-150" onClick={() => toggleComplete(task.id, task.completed, task.priority)}>
+                              <div
+                                className={`checkbox scale-125 md:scale-150 ${!isActionable ? 'cursor-not-allowed opacity-50' : ''}`}
+                                onClick={() => isActionable && toggleComplete(task.id, task.completed, task.priority)}
+                              >
                                 {task.completed && <Check size={24} color="white" />}
                               </div>
                               <div className="flex-1">
-                                <span className="todo-text block text-2xl font-black tracking-tight">
+                                <span className={`todo-text block text-xl md:text-2xl font-black tracking-tight ${!isActionable ? 'text-slate-500' : ''}`}>
                                   {task.text}
                                 </span>
                               </div>
                               <motion.button
                                 whileHover={{ scale: 1.4, color: '#ef4444', rotate: 10 }}
-                                className="btn-icon delete"
-                                onClick={() => deleteTask(task.id)}
+                                className={`btn-icon delete ${!isActionable ? 'cursor-not-allowed opacity-50' : ''}`}
+                                onClick={() => isActionable && deleteTask(task.id)}
                               >
-                                <Trash2 size={28} />
+                                <Trash2 size={24} className="md:w-7 md:h-7" />
                               </motion.button>
                             </motion.li>
                           ))}
@@ -443,16 +487,18 @@ function App() {
                       </ul>
 
                       {/* THE REQUESTED SPACE BETWEEN SECTIONS */}
-                      {dailyTasks.some(t => t.completed) && dailyTasks.some(t => !t.completed) && (
-                        <div className="my-16 flex items-center gap-4 opacity-30">
-                          <div className="h-[1px] bg-white flex-1"></div>
-                          <span className="text-xs font-black uppercase tracking-[0.3em] whitespace-nowrap">Completed Mastery</span>
-                          <div className="h-[1px] bg-white flex-1"></div>
+                      {dailyTasks.some(t => t.completed) && (
+                        <div className="py-12 flex items-center gap-6 opacity-60">
+                          <div className="h-[2px] bg-gradient-to-r from-transparent via-white/50 to-white/80 flex-1 rounded-full"></div>
+                          <span className="text-sm pointer-events-none font-black uppercase tracking-[0.4em] text-white/60 whitespace-nowrap text-center px-4 drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">
+                            Completed Mastery
+                          </span>
+                          <div className="h-[2px] bg-gradient-to-r from-white/80 via-white/50 to-transparent flex-1 rounded-full"></div>
                         </div>
                       )}
 
                       {/* COMPLETED TASKS */}
-                      <ul className="todo-list opacity-60 scale-95">
+                      <ul className="todo-list opacity-60 mt-8">
                         <AnimatePresence mode="popLayout">
                           {dailyTasks.filter(t => t.completed).map((task) => (
                             <motion.li
@@ -462,22 +508,22 @@ function App() {
                               animate={{ opacity: 1, x: 0 }}
                               exit={{ opacity: 0, scale: 0.5 }}
                               transition={{ type: "spring", stiffness: 200, damping: 25 }}
-                              className={`todo-item completed priority-${task.priority} p-6 shadow-lg grayscale`}
+                              className={`todo-item completed priority-${task.priority} p-4 md:p-6 shadow-lg grayscale`}
                             >
-                              <div className="checkbox checked scale-150" onClick={() => toggleComplete(task.id, task.completed, task.priority)}>
+                              <div className={`checkbox checked scale-125 md:scale-150 ${!isActionable ? 'cursor-not-allowed opacity-50' : ''}`} onClick={() => isActionable && toggleComplete(task.id, task.completed, task.priority)}>
                                 <Check size={24} color="white" />
                               </div>
                               <div className="flex-1">
-                                <span className="todo-text block text-2xl font-bold tracking-tight line-through">
+                                <span className="todo-text block text-xl md:text-2xl font-bold tracking-tight line-through">
                                   {task.text}
                                 </span>
                               </div>
                               <motion.button
                                 whileHover={{ scale: 1.4, color: '#ef4444', rotate: 10 }}
-                                className="btn-icon delete"
-                                onClick={() => deleteTask(task.id)}
+                                className={`btn-icon delete ${!isActionable ? 'cursor-not-allowed opacity-50' : ''}`}
+                                onClick={() => isActionable && deleteTask(task.id)}
                               >
-                                <Trash2 size={28} />
+                                <Trash2 size={24} className="md:w-7 md:h-7" />
                               </motion.button>
                             </motion.li>
                           ))}
@@ -520,11 +566,9 @@ function App() {
             </div>
 
             <div className="momentum-header mb-12 relative z-10">
+
               <div className="momentum-title-group">
-                <h3 className="momentum-main-title">
-                  Visualizing Your Momentum Flow
-                </h3>
-                <p className="momentum-subtitle">Trend & Analytics</p>
+                <p className="momentum-subtitle mt-4">Trend & Analytics</p>
               </div>
               <div className="momentum-stats-group">
                 <div className="momentum-stat">
@@ -542,10 +586,14 @@ function App() {
               <ResponsiveContainer width="100%" height="100%">
                 <ComposedChart data={chartData} margin={{ top: 20, right: 30, left: 30, bottom: 20 }}>
                   <defs>
-                    <linearGradient id="growthGradient" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#6366f1" stopOpacity={0.6} />
-                      <stop offset="60%" stopColor="#6366f1" stopOpacity={0.1} />
-                      <stop offset="100%" stopColor="#6366f1" stopOpacity={0} />
+                    <linearGradient id="flowGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#818cf8" stopOpacity={0.8} />
+                      <stop offset="60%" stopColor="#6366f1" stopOpacity={0.4} />
+                      <stop offset="100%" stopColor="#4338ca" stopOpacity={0.1} />
+                    </linearGradient>
+                    <linearGradient id="growthFill" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#10b981" stopOpacity={0.3} />
+                      <stop offset="100%" stopColor="#10b981" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid vertical={false} stroke="rgba(255,255,255,0.03)" />
@@ -557,9 +605,20 @@ function App() {
                     axisLine={false}
                     tick={{ fill: '#94a3b8', fontWeight: 900, dy: 15 }}
                   />
-                  <YAxis yAxisId="left" hide={true} />
-                  <YAxis yAxisId="right" orientation="right" hide={true} domain={[0, 110]} />
-
+                  <YAxis
+                    yAxisId="left"
+                    stroke="rgba(255,255,255,0.1)"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                    tick={{ fill: '#64748b' }}
+                    label={{ value: 'Hours', angle: -90, position: 'insideLeft', fill: '#64748b' }}
+                  />
+                  <YAxis
+                    yAxisId="right"
+                    orientation="right"
+                    hide={true}
+                  />
                   <Tooltip
                     contentStyle={{
                       background: '#0f172a',
@@ -572,42 +631,28 @@ function App() {
                     itemStyle={{ fontSize: '1.2rem', fontWeight: 900, marginBottom: '8px' }}
                   />
 
-                  {/* DAILY ANALYSIS: TASK VOLUME (BARS) */}
-                  <Bar
-                    yAxisId="left"
-                    dataKey="completed"
-                    name="Daily Victories"
-                    barSize={45}
-                    radius={[12, 12, 4, 4]}
-                    fill="rgba(99, 102, 241, 0.15)"
-                  />
-
-                  {/* WEEKLY ANALYSIS: PERFORMANCE FLOW (AREA) */}
+                  {/* PERSONAL DEVELOPMENT TRAJECTORY (AREA) */}
                   <Area
                     yAxisId="right"
                     type="monotone"
-                    dataKey="currentRate"
-                    name="Success Rate %"
-                    stroke="#6366f1"
-                    strokeWidth={8}
-                    fill="url(#growthGradient)"
-                    animationDuration={2500}
-                    dot={{ r: 8, fill: '#fff', stroke: '#6366f1', strokeWidth: 4 }}
-                    activeDot={{ r: 12, fill: '#6366f1', stroke: '#fff', strokeWidth: 4 }}
+                    dataKey="cumulativeGrowth"
+                    name="Self-Development Level"
+                    stroke="#10b981"
+                    strokeWidth={3}
+                    fill="url(#growthFill)"
                   />
 
-                  {/* PREVIOUS WEEK TREND (REFERENCE LINE) */}
-                  <Line
-                    yAxisId="right"
-                    type="monotone"
-                    dataKey="prevRate"
-                    name="Last Week %"
-                    stroke="rgba(255, 255, 255, 0.2)"
-                    strokeWidth={3}
-                    strokeDasharray="8 8"
-                    dot={false}
+                  {/* DAILY SPENDING HOURS FLOW */}
+                  <Bar
+                    yAxisId="left"
+                    dataKey="focusHours"
+                    name="Deep Focus Hours"
+                    radius={[20, 20, 0, 0]}
+                    fill="url(#flowGradient)"
+                    barSize={60}
                     animationDuration={2000}
-                  />
+                  >
+                  </Bar>
                 </ComposedChart>
               </ResponsiveContainer>
             </div>
