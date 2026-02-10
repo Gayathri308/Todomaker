@@ -27,7 +27,7 @@ git push -u origin main
 3. **Configure:**
    - Name: `zentask-backend`
    - Root Directory: `backend`
-   - Build Command: `npm install`
+   - Build Command: `npm install --legacy-peer-deps`
    - Start Command: `npm start`
 4. **Environment Variables:**
    ```
@@ -47,7 +47,7 @@ git push -u origin main
 3. **Configure:**
    - Name: `zentask-frontend`
    - Root Directory: `frontend`
-   - Build Command: `npm install && npm run build`
+   - Build Command: `npm install --legacy-peer-deps && npm run build`
    - Publish Directory: `dist`
 4. **Environment Variable:**
    ```

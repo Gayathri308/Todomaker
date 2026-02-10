@@ -114,7 +114,7 @@ You will create **two services** on Render: one for the backend and one for the 
     | :--- | :--- |
     | **Name** | `zentask-frontend` (or similar) |
     | **Root Directory** | `frontend` |
-    | **Build Command** | `npm run build` |
+    | **Build Command** | `npm install --legacy-peer-deps && npm run build` |
     | **Publish Directory** | `dist` |
 
 5.  **Environment Variables:**

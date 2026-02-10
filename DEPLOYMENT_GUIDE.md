@@ -51,7 +51,7 @@ Fill in these details:
 | **Branch** | `main` |
 | **Root Directory** | `backend` |
 | **Runtime** | `Node` |
-| **Build Command** | `npm install` |
+| **Build Command** | `npm install --legacy-peer-deps` |
 | **Start Command** | `npm start` |
 | **Instance Type** | `Free` |
 
@@ -90,7 +90,7 @@ Fill in these details:
 | **Name** | `zentask-frontend` (or any name) |
 | **Branch** | `main` |
 | **Root Directory** | `frontend` |
-| **Build Command** | `npm install && npm run build` |
+| **Build Command** | `npm install --legacy-peer-deps && npm run build` |
 | **Publish Directory** | `dist` |
 
 ### 3. Add Environment Variable
@@ -98,8 +98,7 @@ Click **"Advanced"** → **"Add Environment Variable"**
 
 **IMPORTANT:** Add your backend URL:
 
-```
-VITE_API_URL=https://your-backend-url.onrender.com/api/tasks
+```VITE_API_URL=sudo delete static site zentask-frontend
 ```
 
 Replace `your-backend-url` with the actual URL from Step 2.4 above.
@@ -162,6 +161,7 @@ Render will **automatically redeploy** both frontend and backend! 🎉
 ## 📊 Free Tier Limits
 
 **Render Free Tier:**
+
 - ✅ 750 hours/month (enough for 1 service running 24/7)
 - ✅ Automatic HTTPS
 - ✅ Auto-deploy from GitHub
