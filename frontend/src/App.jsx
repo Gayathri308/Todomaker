@@ -323,6 +323,24 @@ function App() {
       animate="visible"
       variants={pageVariants}
     >
+      {/* BRAND HEADER */}
+      <div className="brand-container">
+        <motion.div
+          className="brand-logo"
+          whileHover={{ scale: 1.05, rotate: [0, -5, 5, 0] }}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="logo-icon-box">
+            <Zap size={32} fill="#6366f1" className="text-primary" />
+          </div>
+          <span className="brand-text">ZenTask</span>
+        </motion.div>
+        <div className="brand-status">
+          <div className="status-dot"></div>
+          <span>System Active</span>
+        </div>
+      </div>
+
       {/* SUCCEED SECTION (TOP ROW WITH ANIMATED BORDER) */}
       <div className="section-header">
         <div className="section-icon-wrapper">
